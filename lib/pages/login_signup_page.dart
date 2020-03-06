@@ -4,10 +4,10 @@ import '../services/authentication.dart';
 enum LoginType { GOOGLE, EMAIL }
 
 class LoginSignupPage extends StatefulWidget {
-  LoginSignupPage({this.auth, this.loginCallback});
+  // LoginSignupPage({this.auth, this.loginCallback});
 
-  final BaseAuth auth;
-  final VoidCallback loginCallback;
+  // final BaseAuth auth;
+  // final VoidCallback loginCallback;
 
   @override
   State<StatefulWidget> createState() => new _LoginSignupPageState();
@@ -15,6 +15,9 @@ class LoginSignupPage extends StatefulWidget {
 
 class _LoginSignupPageState extends State<LoginSignupPage> {
   final _formKey = new GlobalKey<FormState>();
+  Map<String, dynamic> args;
+  BaseAuth _auth;
+  Function(String userId) _loginCallback;
 
   String _email;
   String _password;
@@ -25,6 +28,10 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    args = ModalRoute.of(context).settings.arguments;
+    _auth = args['auth'];
+    _loginCallback = args['loginCallback'];
+
     return new Scaffold(
         // appBar: new AppBar(
         //   title: new Text('Flutter login demo'),
@@ -75,7 +82,6 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
       return true;
     }
 
-    
     return false;
   }
 
@@ -89,13 +95,13 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
       String userId = "";
       try {
         if (type == LoginType.GOOGLE) {
-          userId = await widget.auth.loginGoogle();
+          userId = await _auth.loginGoogle();
           print('Signed in Google: $userId');
         } else if (_isLoginForm) {
-          userId = await widget.auth.signIn(_email, _password);
+          userId = await _auth.signIn(_email, _password);
           print('Signed in: $userId');
         } else {
-          userId = await widget.auth.signUp(_email, _password);
+          userId = await _auth.signUp(_email, _password);
           //widget.auth.sendEmailVerification();
           //_showVerifyEmailSentDialog();
           print('Signed up user: $userId');
@@ -105,7 +111,8 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
         });
 
         if (userId.length > 0 && userId != null && _isLoginForm) {
-          widget.loginCallback();
+          _loginCallback(userId);
+          Navigator.pop(context, userId);
         }
       } catch (e) {
         print('Error: $e');
@@ -219,7 +226,7 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
             color: Colors.blue,
             child: new Text(_isLoginForm ? 'Login' : 'Create account',
                 style: new TextStyle(fontSize: 20.0, color: Colors.white)),
-            onPressed: (){
+            onPressed: () {
               validateAndSubmit(LoginType.EMAIL);
             },
           ),

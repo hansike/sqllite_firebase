@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'pages/login_signup_page.dart';
 import 'services/authentication.dart';
 import 'pages/root_page.dart';
 
+final Auth auth = new Auth();
 final routes = {
-  '/': (BuildContext context) => new RootPage(auth: new Auth()),
-  '/page1': (BuildContext context) => Page1(),
-  '/page4': (BuildContext context) => Page4(),
+  '/': (context) => new RootPage(auth: auth),
+  '/login': (context) => LoginSignupPage(),
+  '/page1': (context) => Page1(),
+  '/page4': (context) => Page4(),
 };
 
 class Page1 extends StatefulWidget {
