@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Memo {
-  int id;
+  
   String key;
   String color;
   String subject;
@@ -12,7 +12,7 @@ class Memo {
   String updDt;
 
   Memo(
-      {this.id,
+      {
       this.key,
       this.color,
       this.subject,
@@ -23,8 +23,7 @@ class Memo {
       this.updDt});
 
   Memo.fromSnapshot(DocumentSnapshot snapshot)
-      : id = snapshot.data["id"],
-        key = snapshot.documentID,
+      : key = snapshot.documentID,
         userId = snapshot.data["userId"],
         color = snapshot.data["color"],
         subject = snapshot.data["subject"],
@@ -34,7 +33,6 @@ class Memo {
         updDt = snapshot.data["updDt"].toString();
 
   toJson() => {
-        "id": id,
         "key": key,
         "userId": userId,
         "color": color,
@@ -46,7 +44,6 @@ class Memo {
       };
   
   factory Memo.fromMap(Map<String, dynamic> json) => new Memo(
-        id: json["id"],
         key: json["key"],
         userId: json["userId"],
         color: json["color"],

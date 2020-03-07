@@ -2,8 +2,9 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-
+import 'package:uuid/uuid.dart';
 import '../models/memo.dart';
+import 'dart:math';
 
 abstract class BaseMemoService {
   setUserId(String userId);
@@ -38,7 +39,10 @@ class MemoService implements BaseMemoService {
     } else {
       _memoList = await _memoSqlite.setMemoList(userId);
     }
-
+    // add admob
+    Random random = new Random();
+    _memoList.insert(random.nextInt(_memoList.length)+1, new Memo(key: "admob"));
+    
     return _memoList;
   }
 
@@ -96,7 +100,7 @@ class MemoSqlite {
     return await openDatabase(path, version: 1, onOpen: (db) {},
         onCreate: (Database db, int version) async {
       await db.execute(
-          "CREATE TABLE memo(id INTEGER PRIMARY KEY, key TEXT, color TEXT, subject TEXT, contents TEXT, completed NUMERIC, userId TEXT, regDt TEXT, updDt TEXT )");
+          "CREATE TABLE memo(key TEXT, color TEXT, subject TEXT, contents TEXT, completed NUMERIC, userId TEXT, regDt TEXT, updDt TEXT )");
     });
   }
 
@@ -113,15 +117,15 @@ class MemoSqlite {
     print('sqlite - addMemo()');
     final db = await database;
 
-    var table = await db.rawQuery("SELECT MAX(id)+1 as id FROM memo");
+    var uuid = new Uuid();
 
-    int id = table.first["id"];
-    print('sqlite - setMemoList() - id seq = '+id.toString());
+    String key = uuid.v1();
+    print('sqlite - setMemoList() - key = '+key.toString());
     var res = await db.rawInsert(
-        "INSERT Into memo (id, color, subject, contents, completed, userId, regDt)"
+        "INSERT Into memo (key, color, subject, contents, completed, userId, regDt)"
         " VALUES (?,?,?,?,?,?,?)",
         [
-          id,
+          key,
           memo.color,
           memo.subject,
           memo.contents,
@@ -133,17 +137,17 @@ class MemoSqlite {
   }
 
   updateMemo(Memo memo) async {
-    print('sqlite - updateMemo($memo.id)');
+    print('sqlite - updateMemo($memo.key)');
     final db = await database;
     var res = await db
-        .update("memo", memo.toJson(), where: "id = ?", whereArgs: [memo.id]);
+        .update("memo", memo.toJson(), where: "key = ?", whereArgs: [memo.key]);
     return res;
   }
 
-  deleteMemo(String memoId, String userId) async {
-    print('sqlite - deleteMemo($memoId, $userId)');
+  deleteMemo(String key, String userId) async {
+    print('sqlite - deleteMemo($key, $userId)');
     final db = await database;
-    db.delete("memo", where: "id = ?", whereArgs: [memoId]);
+    db.delete("memo", where: "key = ?", whereArgs: [key]);
   }
 }
 
