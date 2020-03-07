@@ -129,99 +129,29 @@ class _MemoPageState extends State<MemoPage> {
     List<Memo> _memoList = _memoService.getMemoList();
     // if (_memoList.length > 0) {
     return ListView.builder(
+        padding: const EdgeInsets.all(10.0),
         shrinkWrap: true,
         itemCount: _memoList.length,
         itemBuilder: (BuildContext context, int index) {
-          String memoId = _memoList[index].key;
-          String subject = _memoList[index].subject;
-          bool completed = _memoList[index].completed;
+          Memo _memo = _memoList[index];
           //String userId = _memoList[index].userId;
-          if ("admob" == memoId) {
-            // admob
-            return NativeAdmobBannerView(
-              // Your ad unit id
-              adUnitID: _adUnitID,
 
-              // Styling native view with options
-              options: const BannerOptions(
-                backgroundColor: Colors.white,
-                indicatorColor: Colors.black,
-                ratingColor: Colors.yellow,
-                adLabelOptions: const TextOptions(
-                  fontSize: 12,
-                  color: Colors.white,
-                  backgroundColor: Color(0xFFFFCC66),
-                ),
-                headlineTextOptions: const TextOptions(
-                  fontSize: 16,
-                  color: Colors.black,
-                ),
-                advertiserTextOptions: const TextOptions(
-                  fontSize: 14,
-                  color: Colors.black,
-                ),
-                bodyTextOptions: const TextOptions(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-                storeTextOptions: const TextOptions(
-                  fontSize: 12,
-                  color: Colors.black,
-                ),
-                priceTextOptions: const TextOptions(
-                  fontSize: 12,
-                  color: Colors.black,
-                ),
-                callToActionOptions: const TextOptions(
-                  fontSize: 15,
-                  color: Colors.white,
-                  backgroundColor: Color(0xFF4CBE99),
-                ),
+          // admob
+          return Container(
+            margin: EdgeInsets.symmetric(vertical: 5.0),
+            decoration: BoxDecoration(
+              color: Color(0xFFFFE082),
+              border: Border.all(
+                color: Colors.grey,
+                width: 1.0,
               ),
-
-              // Whether to show media or not
-              showMedia: true,
-
-              // Content paddings
-              contentPadding: EdgeInsets.all(10),
-
-              onCreate: (controller) {
-                // controller.setOptions(BannerOptions()); // change view styling options
-              },
-            );
-          } else {
-            return Dismissible(
-              key: Key(memoId),
-              background: Container(color: Colors.red),
-              onDismissed: (direction) async {
-                deleteMemo(memoId, index);
-              },
-              child: ListTile(
-                title: InkWell(
-                  onTap: () {
-                    Scaffold.of(context).showSnackBar(SnackBar(
-                      content: Text('Tap'),
-                    ));
-                  },
-                  child: Text(
-                    subject,
-                    style: TextStyle(fontSize: 20.0),
+              borderRadius: BorderRadius.all(
+                  Radius.circular(5.0) //         <--- border radius here
                   ),
-                ),
-                trailing: IconButton(
-                    icon: (completed)
-                        ? Icon(
-                            Icons.done_outline,
-                            color: Colors.green,
-                            size: 20.0,
-                          )
-                        : Icon(Icons.done, color: Colors.grey, size: 20.0),
-                    onPressed: () {
-                      updateMemo(_memoList[index]);
-                    }),
-              ),
-            );
-          }
+            ),
+            child: showMenuListItem(_memo, index, context),
+          );
+          // } else {
         });
     // } else {
     //   return Center(
@@ -231,6 +161,104 @@ class _MemoPageState extends State<MemoPage> {
     //     style: TextStyle(fontSize: 30.0),
     //   ));
     // }
+  }
+
+  Widget showMenuListItem(Memo _memo, int index, BuildContext context) {
+    if ("admob" == _memo.key) {
+      return NativeAdmobBannerView(
+        // Your ad unit id
+        adUnitID: _adUnitID,
+
+        // Styling native view with options
+        options: const BannerOptions(
+          backgroundColor: Color(0xFFFFE082),
+          indicatorColor: Colors.black,
+          ratingColor: Colors.yellow,
+          adLabelOptions: const TextOptions(
+            fontSize: 12,
+            color: Colors.white,
+            backgroundColor: Color(0xFFFFCC66),
+          ),
+          headlineTextOptions: const TextOptions(
+            fontSize: 20,
+            color: Colors.black,
+          ),
+          advertiserTextOptions: const TextOptions(
+            fontSize: 14,
+            color: Colors.black,
+          ),
+          bodyTextOptions: const TextOptions(
+            fontSize: 14,
+            color: Colors.grey,
+          ),
+          storeTextOptions: const TextOptions(
+            fontSize: 12,
+            color: Colors.black,
+          ),
+          priceTextOptions: const TextOptions(
+            fontSize: 12,
+            color: Colors.black,
+          ),
+          callToActionOptions: const TextOptions(
+            fontSize: 15,
+            color: Colors.white,
+            backgroundColor: Color(0xFF4CBE99),
+          ),
+        ),
+
+        // Whether to show media or not
+        showMedia: true,
+
+        // Content paddings
+        contentPadding: EdgeInsets.all(10),
+
+        onCreate: (controller) {
+          // controller.setOptions(BannerOptions()); // change view styling options
+        },
+      );
+    } else {
+      return InkWell(
+        onTap: () {
+          Scaffold.of(context).showSnackBar(SnackBar(
+            content: Text('Tap'),
+          ));
+        },
+        child: Dismissible(
+          key: Key(_memo.key),
+          background: Container(
+            color: Colors.green,
+            child: Icon(Icons.check),
+            alignment: Alignment.centerLeft,
+          ),
+          secondaryBackground: Container(
+            color: Colors.red,
+            child: Icon(Icons.delete),
+            alignment: Alignment.centerRight,
+          ),
+          onDismissed: (direction) async {
+            deleteMemo(_memo.key, index);
+          },
+          child: ListTile(
+            title: Text(
+              _memo.subject,
+              style: TextStyle(fontSize: 20.0),
+            ),
+            subtitle: Text(_memo.contents, style: TextStyle(fontSize: 14.0)),
+            trailing: IconButton(
+                icon: (_memo.completed)
+                    ? Icon(
+                        Icons.done_outline,
+                        color: Colors.green,
+                        size: 20.0,
+                      )
+                    : Icon(Icons.done, color: Colors.grey, size: 20.0),
+                onPressed: () {
+                  updateMemo(_memo);
+                }),
+          ),
+        ),
+      );
+    }
   }
 
   loginCallback(String userId) async {

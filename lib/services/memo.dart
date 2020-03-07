@@ -40,9 +40,12 @@ class MemoService implements BaseMemoService {
       _memoList = await _memoSqlite.setMemoList(userId);
     }
     // add admob
-    Random random = new Random();
-    _memoList.insert(random.nextInt(_memoList.length)+1, new Memo(key: "admob"));
-    
+    if (_memoList.length > 0) {
+      Random random = new Random();
+      _memoList.insert(
+          random.nextInt(_memoList.length) + 1, new Memo(key: "admob"));
+    }
+
     return _memoList;
   }
 
@@ -110,6 +113,11 @@ class MemoSqlite {
     var res = await db.query("memo");
     List<Memo> list =
         res.isNotEmpty ? res.map((c) => Memo.fromMap(c)).toList() : [];
+    for (int i = 0; i < list.length; i++) {
+      print("list - $i - " +
+          list[i].key.toString() +
+          list[i].completed.toString());
+    }
     return list;
   }
 
@@ -120,7 +128,7 @@ class MemoSqlite {
     var uuid = new Uuid();
 
     String key = uuid.v1();
-    print('sqlite - setMemoList() - key = '+key.toString());
+    print('sqlite - setMemoList() - key = ' + key.toString());
     var res = await db.rawInsert(
         "INSERT Into memo (key, color, subject, contents, completed, userId, regDt)"
         " VALUES (?,?,?,?,?,?,?)",
@@ -129,7 +137,7 @@ class MemoSqlite {
           memo.color,
           memo.subject,
           memo.contents,
-          memo.completed ? 0 : 1,
+          memo.completed ? 1 : 0,
           memo.userId,
           memo.regDt
         ]);
@@ -137,10 +145,10 @@ class MemoSqlite {
   }
 
   updateMemo(Memo memo) async {
-    print('sqlite - updateMemo($memo.key)');
+    print('sqlite - updateMemo()');
     final db = await database;
-    var res = await db
-        .update("memo", memo.toJson(), where: "key = ?", whereArgs: [memo.key]);
+    var res = await db.update("memo", memo.toJsonSqlite(),
+        where: "key = ?", whereArgs: [memo.key]);
     return res;
   }
 

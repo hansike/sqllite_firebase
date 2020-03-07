@@ -42,6 +42,17 @@ class Memo {
         "regDt": regDt.toString(),
         "updDt": updDt.toString(),
       };
+
+      toJsonSqlite() => {
+        "key": key,
+        "userId": userId,
+        "color": color,
+        "subject": subject,
+        "contents": contents,
+        "completed": completed? 1 : 0,
+        "regDt": regDt.toString(),
+        "updDt": updDt.toString(),
+      };
   
   factory Memo.fromMap(Map<String, dynamic> json) => new Memo(
         key: json["key"],
