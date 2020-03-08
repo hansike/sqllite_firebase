@@ -56,6 +56,8 @@ class MemoService implements BaseMemoService {
 
   @override
   addMemo(Memo memo) {
+    memo.regDt = (new Timestamp.now()).toString();
+    
     _memoList.add(memo);
     if (userId != null && userId != '') {
       _memoFirebase.addMemo(memo);
