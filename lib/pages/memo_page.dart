@@ -57,13 +57,13 @@ class _MemoPageState extends State<MemoPage> {
     }
   }
 
-  addNewMemo(String memoItem, String contents) {
-    Memo memo = new Memo(
-        color: '0',
-        subject: memoItem.toString(),
-        contents: contents.toString(),
-        userId: widget.userId,
-        completed: false);
+  addNewMemo(Memo memo) {
+    // Memo memo = new Memo(
+    //     color: '0',
+    //     subject: memoItem.toString(),
+    //     contents: contents.toString(),
+    //     userId: widget.userId,
+    //     completed: false);
     _memoService.addMemo(memo);
   }
 
@@ -79,51 +79,51 @@ class _MemoPageState extends State<MemoPage> {
     });
   }
 
-  showAddMemoDialog(BuildContext context) async {
-    _textEditingController.clear();
-    await showDialog<String>(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            content: new Column(
-              children: <Widget>[
-                new Expanded(
-                    child: new TextField(
-                  controller: _textEditingController,
-                  autofocus: true,
-                  decoration: new InputDecoration(
-                    labelText: 'Subject',
-                  ),
-                )),
-                new Expanded(
-                    child: new TextField(
-                  controller: _textEditingContentsController,
-                  autofocus: false,
-                  decoration: new InputDecoration(
-                    labelText: 'Contents',
-                  ),
-                  keyboardType: TextInputType.multiline,
-                  maxLines: null,
-                ))
-              ],
-            ),
-            actions: <Widget>[
-              new FlatButton(
-                  child: const Text('Cancel'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  }),
-              new FlatButton(
-                  child: const Text('Save'),
-                  onPressed: () {
-                    addNewMemo(_textEditingController.text.toString(),
-                        _textEditingContentsController.text.toString());
-                    Navigator.pop(context);
-                  })
-            ],
-          );
-        });
-  }
+  // showAddMemoDialog(BuildContext context) async {
+  //   _textEditingController.clear();
+  //   await showDialog<String>(
+  //       context: context,
+  //       builder: (BuildContext context) {
+  //         return AlertDialog(
+  //           content: new Column(
+  //             children: <Widget>[
+  //               new Expanded(
+  //                   child: new TextField(
+  //                 controller: _textEditingController,
+  //                 autofocus: true,
+  //                 decoration: new InputDecoration(
+  //                   labelText: 'Subject',
+  //                 ),
+  //               )),
+  //               new Expanded(
+  //                   child: new TextField(
+  //                 controller: _textEditingContentsController,
+  //                 autofocus: false,
+  //                 decoration: new InputDecoration(
+  //                   labelText: 'Contents',
+  //                 ),
+  //                 keyboardType: TextInputType.multiline,
+  //                 maxLines: null,
+  //               ))
+  //             ],
+  //           ),
+  //           actions: <Widget>[
+  //             new FlatButton(
+  //                 child: const Text('Cancel'),
+  //                 onPressed: () {
+  //                   Navigator.pop(context);
+  //                 }),
+  //             new FlatButton(
+  //                 child: const Text('Save'),
+  //                 onPressed: () {
+  //                   addNewMemo(_textEditingController.text.toString(),
+  //                       _textEditingContentsController.text.toString());
+  //                   Navigator.pop(context);
+  //                 })
+  //           ],
+  //         );
+  //       });
+  // }
 
   Widget showMemoList() {
     List<Memo> _memoList = _memoService.getMemoList();
@@ -219,9 +219,14 @@ class _MemoPageState extends State<MemoPage> {
     } else {
       return InkWell(
         onTap: () {
-          Scaffold.of(context).showSnackBar(SnackBar(
-            content: Text('Tap'),
-          ));
+          Navigator.pushNamed(
+            context,
+            '/memo/edit',
+            arguments: <String, dynamic>{
+              'memo': _memo,
+              'editCallback': editCallback,
+            },
+          );
         },
         child: Dismissible(
           key: Key(_memo.key),
@@ -239,11 +244,17 @@ class _MemoPageState extends State<MemoPage> {
             deleteMemo(_memo.key, index);
           },
           child: ListTile(
-            title: Text(
-              _memo.subject,
-              style: TextStyle(fontSize: 20.0),
+            title: Hero(
+              tag: 'sj_' + _memo.key.toString(),
+              child: Text(
+                _memo.subject,
+                style: TextStyle(fontSize: 20.0),
+              ),
             ),
-            subtitle: Text(_memo.contents, style: TextStyle(fontSize: 14.0)),
+            subtitle: Text(_memo.contents,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 3,
+                style: TextStyle(fontSize: 14.0)),
             trailing: IconButton(
                 icon: (_memo.completed)
                     ? Icon(
@@ -283,6 +294,15 @@ class _MemoPageState extends State<MemoPage> {
     }
   }
 
+  editCallback(Memo memo) {
+    memo.userId = widget.userId;
+    if (memo.key != null && memo.key != '') {
+      updateMemo(memo);
+    } else {
+      addNewMemo(memo);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
@@ -311,7 +331,15 @@ class _MemoPageState extends State<MemoPage> {
         body: showMemoList(),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            showAddMemoDialog(context);
+            //showAddMemoDialog(context);
+            Navigator.pushNamed(
+              context,
+              '/memo/edit',
+              arguments: <String, dynamic>{
+                //'memo': '',
+                'editCallback': editCallback,
+              },
+            );
           },
           tooltip: 'Increment',
           child: Icon(Icons.add),
