@@ -1,6 +1,9 @@
-# newnewfirebase
+# sqllite_firebase
 
 A new Flutter project.
+sqlite
+firestore
+google sign in
 
 ## Getting Started
 
