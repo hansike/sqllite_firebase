@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/authentication.dart';
 
 enum LoginType { GOOGLE, EMAIL }
@@ -16,8 +17,8 @@ class LoginSignupPage extends StatefulWidget {
 class _LoginSignupPageState extends State<LoginSignupPage> {
   final _formKey = new GlobalKey<FormState>();
   Map<String, dynamic> args;
-  BaseAuth _auth;
-  Function(String userId) _loginCallback;
+  Auth auth;
+  //Function(String userId) _loginCallback;
 
   String _email;
   String _password;
@@ -28,10 +29,10 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    auth = Provider.of<Auth>(context);
     args = ModalRoute.of(context).settings.arguments;
-    _auth = args['auth'];
-    _loginCallback = args['loginCallback'];
-
+    //_loginCallback = args['loginCallback'];
+    
     return new Scaffold(
         // appBar: new AppBar(
         //   title: new Text('Flutter login demo'),
@@ -91,17 +92,18 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
       _errorMessage = "";
       _isLoading = true;
     });
+
     if (type != LoginType.EMAIL || validateAndSave()) {
       String userId = "";
       try {
         if (type == LoginType.GOOGLE) {
-          userId = await _auth.loginGoogle();
+          userId = await auth.loginGoogle();
           print('Signed in Google: $userId');
         } else if (_isLoginForm) {
-          userId = await _auth.signIn(_email, _password);
+          userId = await auth.signIn(_email, _password);
           print('Signed in: $userId');
         } else {
-          userId = await _auth.signUp(_email, _password);
+          userId = await auth.signUp(_email, _password);
           //widget.auth.sendEmailVerification();
           //_showVerifyEmailSentDialog();
           print('Signed up user: $userId');
@@ -111,8 +113,9 @@ class _LoginSignupPageState extends State<LoginSignupPage> {
         });
 
         if (userId.length > 0 && userId != null && _isLoginForm) {
-          _loginCallback(userId);
-          Navigator.pop(context, userId);
+          //_loginCallback(userId);
+          Navigator.pushReplacementNamed(context, '/');
+          //Navigator.pop(context, userId);
         }
       } catch (e) {
         print('Error: $e');

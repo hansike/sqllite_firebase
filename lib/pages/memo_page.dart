@@ -1,26 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-//import 'package:firebase_database/firebase_database.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import '../services/authentication.dart';
 import '../services/memo.dart';
 import '../models/memo.dart';
+import 'drawer.dart';
 import 'package:flutter_native_admob/flutter_native_admob.dart';
 
 class MemoPage extends StatefulWidget {
-  MemoPage(
-      {Key key,
-      this.auth,
-      this.userId,
-      this.loginCallback,
-      this.logoutCallback})
-      : super(key: key);
-
-  final BaseAuth auth;
-  final VoidCallback logoutCallback;
-  final VoidCallback loginCallback;
-  final String userId;
-  final Firestore firestore = Firestore.instance;
   @override
   State<StatefulWidget> createState() => new _MemoPageState();
 }
@@ -29,8 +16,7 @@ class _MemoPageState extends State<MemoPage> {
   //List<Memo> _memoList;
   bool isDisposed = false;
   MemoService _memoService = new MemoService();
-  final _textEditingController = TextEditingController();
-  final _textEditingContentsController = TextEditingController();
+  Auth auth;
 
   // native admob
   static const _adUnitID = "ca-app-pub-5432103368789181/2439397011";
@@ -38,8 +24,6 @@ class _MemoPageState extends State<MemoPage> {
   @override
   void initState() {
     super.initState();
-    _memoService.setUserId(widget.userId);
-    setList();
   }
 
   @override
@@ -58,12 +42,6 @@ class _MemoPageState extends State<MemoPage> {
   }
 
   addNewMemo(Memo memo) {
-    // Memo memo = new Memo(
-    //     color: '0',
-    //     subject: memoItem.toString(),
-    //     contents: contents.toString(),
-    //     userId: widget.userId,
-    //     completed: false);
     _memoService.addMemo(memo);
   }
 
@@ -78,52 +56,6 @@ class _MemoPageState extends State<MemoPage> {
       _memoService.deleteMemo(memoId);
     });
   }
-
-  // showAddMemoDialog(BuildContext context) async {
-  //   _textEditingController.clear();
-  //   await showDialog<String>(
-  //       context: context,
-  //       builder: (BuildContext context) {
-  //         return AlertDialog(
-  //           content: new Column(
-  //             children: <Widget>[
-  //               new Expanded(
-  //                   child: new TextField(
-  //                 controller: _textEditingController,
-  //                 autofocus: true,
-  //                 decoration: new InputDecoration(
-  //                   labelText: 'Subject',
-  //                 ),
-  //               )),
-  //               new Expanded(
-  //                   child: new TextField(
-  //                 controller: _textEditingContentsController,
-  //                 autofocus: false,
-  //                 decoration: new InputDecoration(
-  //                   labelText: 'Contents',
-  //                 ),
-  //                 keyboardType: TextInputType.multiline,
-  //                 maxLines: null,
-  //               ))
-  //             ],
-  //           ),
-  //           actions: <Widget>[
-  //             new FlatButton(
-  //                 child: const Text('Cancel'),
-  //                 onPressed: () {
-  //                   Navigator.pop(context);
-  //                 }),
-  //             new FlatButton(
-  //                 child: const Text('Save'),
-  //                 onPressed: () {
-  //                   addNewMemo(_textEditingController.text.toString(),
-  //                       _textEditingContentsController.text.toString());
-  //                   Navigator.pop(context);
-  //                 })
-  //           ],
-  //         );
-  //       });
-  // }
 
   Widget showMemoList() {
     List<Memo> _memoList = _memoService.getMemoList();
@@ -140,7 +72,7 @@ class _MemoPageState extends State<MemoPage> {
           return Container(
             margin: EdgeInsets.symmetric(vertical: 5.0),
             decoration: BoxDecoration(
-              color: Color(0xFFFFE082),
+              color: Color(_memo.color),
               border: Border.all(
                 color: Colors.grey,
                 width: 1.0,
@@ -207,7 +139,7 @@ class _MemoPageState extends State<MemoPage> {
         ),
 
         // Whether to show media or not
-        showMedia: true,
+        showMedia: false,
 
         // Content paddings
         contentPadding: EdgeInsets.all(10),
@@ -244,12 +176,9 @@ class _MemoPageState extends State<MemoPage> {
             deleteMemo(_memo.key, index);
           },
           child: ListTile(
-            title: Hero(
-              tag: 'sj_' + _memo.key.toString(),
-              child: Text(
-                _memo.subject,
-                style: TextStyle(fontSize: 20.0),
-              ),
+            title: Text(
+              _memo.subject,
+              style: TextStyle(fontSize: 20.0),
             ),
             subtitle: Text(_memo.contents,
                 overflow: TextOverflow.ellipsis,
@@ -273,7 +202,7 @@ class _MemoPageState extends State<MemoPage> {
   }
 
   loginCallback(String userId) async {
-    widget.loginCallback();
+    //TODO widget.loginCallback();
     _memoService.setUserId(userId);
     await setList();
     if (!isDisposed) {
@@ -285,17 +214,17 @@ class _MemoPageState extends State<MemoPage> {
 
   signOut() async {
     try {
-      await widget.auth.signOut();
+      await auth.signOut();
       _memoService.setUserId("");
-      setList();
-      widget.logoutCallback();
+      
+      //TODO widget.logoutCallback();
     } catch (e) {
       print(e);
     }
   }
 
   editCallback(Memo memo) {
-    memo.userId = widget.userId;
+    memo.userId = auth.getUserId();
     if (memo.key != null && memo.key != '') {
       updateMemo(memo);
     } else {
@@ -305,9 +234,16 @@ class _MemoPageState extends State<MemoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
+    auth = Provider.of<Auth>(context);
+    _memoService.setUserId(auth.getUserId());
+    //setList();
+
+    return Scaffold(
+        drawer: Drawer(
+          child: AppDrawer(),
+        ),
         appBar: new AppBar(
-          title: new Text(widget.auth.getUserId()),
+          title: new Text(auth.getUserId()),
           actions: <Widget>[
             new FlatButton(
                 child: new Text('login',
@@ -317,7 +253,6 @@ class _MemoPageState extends State<MemoPage> {
                     context,
                     '/login',
                     arguments: <String, dynamic>{
-                      'auth': widget.auth,
                       'loginCallback': loginCallback,
                     },
                   );
@@ -336,7 +271,6 @@ class _MemoPageState extends State<MemoPage> {
               context,
               '/memo/edit',
               arguments: <String, dynamic>{
-                //'memo': '',
                 'editCallback': editCallback,
               },
             );

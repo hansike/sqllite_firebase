@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -18,12 +19,16 @@ abstract class BaseAuth {
   Future<bool> isEmailVerified();
 
   String getUserId();
+  
+  FirebaseUser user;
+  bool isSignedIn;
 }
 
-class Auth implements BaseAuth {
+class Auth extends ChangeNotifier implements BaseAuth  {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   FirebaseUser user;
+  bool isSignedIn = false;
 
   String getUserId() {
     String uid;
@@ -44,6 +49,8 @@ class Auth implements BaseAuth {
     AuthResult authResult =
         await _firebaseAuth.signInWithCredential(credential);
     user = authResult.user;
+    isSignedIn = true;
+    notifyListeners();
     return user.uid;
   }
 
@@ -51,6 +58,8 @@ class Auth implements BaseAuth {
     AuthResult result = await _firebaseAuth.signInWithEmailAndPassword(
         email: email, password: password);
     user = result.user;
+    isSignedIn = true;
+    notifyListeners();
     return user.uid;
   }
 
@@ -58,6 +67,8 @@ class Auth implements BaseAuth {
     AuthResult result = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     user = result.user;
+    isSignedIn = true;
+    notifyListeners();
     return user.uid;
   }
 
@@ -68,6 +79,7 @@ class Auth implements BaseAuth {
 
   Future<void> signOut() async {
     user = null;
+    isSignedIn = false;
     return _firebaseAuth.signOut();
   }
 

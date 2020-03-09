@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Memo {
   
   String key;
-  String color;
+  int color;
   String subject;
   String contents;
   bool completed;
@@ -29,8 +29,8 @@ class Memo {
         subject = snapshot.data["subject"],
         contents = snapshot.data["contents"],
         completed = snapshot.data["completed"],
-        regDt = snapshot.data["regDt"].toString(),
-        updDt = snapshot.data["updDt"].toString();
+        regDt = snapshot.data["regDt"]==null?'':snapshot.data["regDt"].toString(),
+        updDt = snapshot.data["regDt"]==null?'':snapshot.data["updDt"].toString();
 
   toJson() => {
         "key": key,
@@ -44,22 +44,22 @@ class Memo {
       };
 
       toJsonSqlite() => {
-        "key": key,
-        "userId": userId,
+        "key": key.toString(),
+        "userId": userId.toString(),
         "color": color,
-        "subject": subject,
-        "contents": contents,
+        "subject": subject.toString(),
+        "contents": contents.toString(),
         "completed": completed? 1 : 0,
         "regDt": regDt.toString(),
         "updDt": updDt.toString(),
       };
   
   factory Memo.fromMap(Map<String, dynamic> json) => new Memo(
-        key: json["key"],
-        userId: json["userId"],
+        key: json["key"].toString(),
+        userId: json["userId"].toString(),
         color: json["color"],
-        subject: json["subject"],
-        contents: json["contents"],
+        subject: json["subject"].toString(),
+        contents: json["contents"].toString(),
         completed: json["completed"] == 1,
         regDt: json["regDt"].toString(),
         updDt: json["updDt"].toString(),

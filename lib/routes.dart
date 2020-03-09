@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:newnewfirebase/pages/memo_page.dart';
 import 'pages/login_signup_page.dart';
 import 'pages/memo_edit_page.dart';
 import 'services/authentication.dart';
-import 'pages/root_page.dart';
 
 final Auth auth = new Auth();
 final routes = {
-  '/': (context) => new RootPage(auth: auth),
+  '/': (context) => MemoPage(),
   '/login': (context) => LoginSignupPage(),
   '/memo/edit': (context) => MemoEditPage(),
   '/page1': (context) => Page1(),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
@@ -57,8 +58,9 @@ class MemoService implements BaseMemoService {
   @override
   addMemo(Memo memo) {
     memo.regDt = (new Timestamp.now()).toString();
-    
+
     _memoList.add(memo);
+
     if (userId != null && userId != '') {
       _memoFirebase.addMemo(memo);
     } else {
@@ -102,10 +104,10 @@ class MemoSqlite {
   initDB() async {
     print('sqlite - initDB()');
     String path = join(await getDatabasesPath(), "memo_database.db");
-    return await openDatabase(path, version: 1, onOpen: (db) {},
+    return await openDatabase(path, version: 2, onOpen: (db) {},
         onCreate: (Database db, int version) async {
       await db.execute(
-          "CREATE TABLE memo(key TEXT, color TEXT, subject TEXT, contents TEXT, completed NUMERIC, userId TEXT, regDt TEXT, updDt TEXT )");
+          "CREATE TABLE memo(key TEXT, color INTEGER, subject TEXT, contents TEXT, completed NUMERIC, userId TEXT, regDt TEXT, updDt TEXT )");
     });
   }
 
@@ -128,14 +130,15 @@ class MemoSqlite {
     final db = await database;
 
     var uuid = new Uuid();
-
     String key = uuid.v1();
+    memo.key = key;
+
     print('sqlite - setMemoList() - key = ' + key.toString());
     var res = await db.rawInsert(
         "INSERT Into memo (key, color, subject, contents, completed, userId, regDt)"
         " VALUES (?,?,?,?,?,?,?)",
         [
-          key,
+          memo.key,
           memo.color,
           memo.subject,
           memo.contents,
@@ -185,10 +188,10 @@ class MemoFirebase {
           .collection('users')
           .document(memo.userId)
           .collection('todo')
-          .add(memo.toJson())
+          .document(memo.key)
+          .setData(memo.toJson())
           .then((docRef) {
-        print("Document written with ID: " + docRef.documentID);
-        memo.key = docRef.documentID;
+        print("Document written with ID: " + memo.key);
       }).catchError((error) {
         print("Error adding document: " + error);
       }).whenComplete(() {
